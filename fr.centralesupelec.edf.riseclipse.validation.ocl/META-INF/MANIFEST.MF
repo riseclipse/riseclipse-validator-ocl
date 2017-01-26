@@ -1,0 +1,17 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: RiseClipse OCL Validation Support
+Bundle-Vendor: CentraleSupélec & EDF
+Bundle-SymbolicName: fr.centralesupelec.edf.riseclipse.validation.ocl
+Bundle-Version: 1.0.0.qualifier
+Require-Bundle: org.eclipse.core.runtime,
+ org.eclipse.emf.ecore,
+ org.eclipse.emf.edit,
+ fr.centralesupelec.edf.riseclipse.main,
+ org.eclipse.ocl.pivot,
+ org.eclipse.ocl.xtext.completeocl,
+ org.eclipse.ocl.xtext.oclstdlib,
+ org.apache.log4j
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-ActivationPolicy: lazy
+Export-Package: fr.centralesupelec.edf.riseclipse.validation.ocl
