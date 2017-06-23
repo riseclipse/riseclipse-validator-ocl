@@ -21,6 +21,7 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -105,6 +106,19 @@ public class OCLValidator {
 
     public void validate( Resource resource, final AdapterFactory adapter, IRiseClipseConsole console ) {
         // workaround for bug 486872
+        
+        // An existing CompleteOCLEObjectValidator may already be present, with the same or others OCL constraints
+        // We have to remove it first
+        ArrayList< EValidator > validatorsToRemove = new ArrayList<>();
+        for( EValidator e : validator.getChildren() ) {
+            if( e instanceof CompleteOCLEObjectValidator ) {
+                validatorsToRemove.add( e );
+            }
+        }
+        for( EValidator e : validator.getChildren() ) {
+            validator.removeChild( e );
+        }
+        
         URI uri = URI.createFileURI( oclTempFile.toFile().getAbsolutePath() );
         CompleteOCLEObjectValidator oclValidator = new CompleteOCLEObjectValidator( modelPackage, uri, environmentFactory );
         validator.addChild( oclValidator );
