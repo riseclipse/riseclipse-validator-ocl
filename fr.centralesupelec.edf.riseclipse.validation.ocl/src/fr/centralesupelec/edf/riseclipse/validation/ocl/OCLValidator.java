@@ -91,10 +91,11 @@ public class OCLValidator {
 //    }
     
     public boolean addOCLDocument( String oclFileName, IRiseClipseConsole console ) {
-        Path path = FileSystems.getDefault().getPath( oclFileName ).toAbsolutePath();
+        //Path path = FileSystems.getDefault().getPath( oclFileName ).toAbsolutePath();
         try {
             BufferedWriter o = Files.newBufferedWriter( oclTempFile, StandardOpenOption.APPEND );
-            o.write( "import \'" + path + "\'\n" );
+            //o.write( "import \'" + path + "\'\n" );
+            o.write( "import \'" + oclFileName + "\'\n" );
             o.close();
         }
         catch( IOException e ) {
@@ -115,7 +116,7 @@ public class OCLValidator {
                 validatorsToRemove.add( e );
             }
         }
-        for( EValidator e : validator.getChildren() ) {
+        for( EValidator e : validatorsToRemove ) {
             validator.removeChild( e );
         }
         
