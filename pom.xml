@@ -16,7 +16,7 @@
   <scm>
     <connection>scm:git:git@gitlab.centralesupelec.fr:RiseClipseGroup/RiseClipseOCLValidator.git</connection>
     <developerConnection>scm:git:git@gitlab.centralesupelec.fr:RiseClipseGroup/RiseClipseOCLValidator.git</developerConnection>
-    <tag>v1.0.1</tag>
+    <tag>HEAD</tag>
   </scm>
  
 
@@ -24,4 +24,5 @@
     <module>fr.centralesupelec.edf.riseclipse.validation.ocl</module>
   </modules>
 
+<version>1.0.2-SNAPSHOT</version>
 </project>
