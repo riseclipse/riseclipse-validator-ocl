@@ -7,15 +7,22 @@
  
   <groupId>fr.centralesupelec.edf.riseclipse</groupId>
   <artifactId>RiseClipseOCLValidator</artifactId>
-  <version>1.0</version>
+  <version>1.0.1-SNAPSHOT</version>
   <packaging>pom</packaging>
   
   <parent>
     <groupId>fr.centralesupelec.edf.riseclipse</groupId>
     <artifactId>fr.centralesupelec.edf.riseclipse.developer.maven-root</artifactId>
-    <version>1.0</version>
+    <version>1.0.1</version>
     <relativePath>../RiseClipseDeveloper/fr.centralesupelec.edf.riseclipse.developer.maven/pom-root.xml</relativePath>
   </parent>
+
+  <scm>
+    <connection>scm:git:git@gitlab.centralesupelec.fr:RiseClipseGroup/RiseClipseOCLValidator.git</connection>
+    <developerConnection>scm:git:git@gitlab.centralesupelec.fr:RiseClipseGroup/RiseClipseOCLValidator.git</developerConnection>
+    <tag>HEAD</tag>
+  </scm>
+ 
 
   <modules>
     <module>fr.centralesupelec.edf.riseclipse.validation.ocl</module>
