@@ -19,6 +19,7 @@
 package fr.centralesupelec.edf.riseclipse.validation.ocl;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -93,11 +94,32 @@ public class OCLValidator {
 //    }
     
     public boolean addOCLDocument( String oclFileName, IRiseClipseConsole console ) {
+        return addOCLDocument( new File( oclFileName ), console );
+    }
+
+    public boolean addOCLDocument( File oclFile, IRiseClipseConsole console ) {
+        if( ! oclFile.exists() ) {
+            console.error( oclFile + " does not exist" );
+            return false;
+        }
+        if( ! oclFile.isFile() ) {
+            console.error( oclFile + " is not a file" );
+            return false;
+        }
+        if( ! oclFile.canRead() ) {
+            console.error( oclFile + " cannot be read" );
+            return false;
+        }
         //Path path = FileSystems.getDefault().getPath( oclFileName ).toAbsolutePath();
+        String path = oclFile.getAbsolutePath();
+        // Take care of Windows paths
+        if( path.charAt( 0 ) != '/' ) {
+            path = "/" + path.replace( '\\', '/' );
+        }
         try {
             BufferedWriter o = Files.newBufferedWriter( oclTempFile, StandardOpenOption.APPEND );
             //o.write( "import \'" + path + "\'\n" );
-            o.write( "import \'" + oclFileName + "\'\n" );
+            o.write( "import \'file:" + path + "\'\n" );
             o.close();
         }
         catch( IOException e ) {
