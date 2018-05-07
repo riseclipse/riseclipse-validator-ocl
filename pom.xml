@@ -4,7 +4,6 @@
  
   <groupId>fr.centralesupelec.edf.riseclipse</groupId>
   <artifactId>RiseClipseOCLValidator</artifactId>
-  <version>1.0.1-SNAPSHOT</version>
   <packaging>pom</packaging>
   
   <parent>
@@ -25,4 +24,5 @@
     <module>fr.centralesupelec.edf.riseclipse.validation.ocl</module>
   </modules>
 
+<version>1.0.2-SNAPSHOT</version>
 </project>
