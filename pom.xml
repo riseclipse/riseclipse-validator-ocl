@@ -4,7 +4,7 @@
  
   <groupId>fr.centralesupelec.edf.riseclipse</groupId>
   <artifactId>RiseClipseOCLValidator</artifactId>
-  <version>1.0.0</version>
+  <version>1.0.1-SNAPSHOT</version>
   <packaging>pom</packaging>
   
   <parent>
@@ -17,7 +17,7 @@
   <scm>
     <connection>scm:git:git@gitlab.centralesupelec.fr:RiseClipseGroup/RiseClipseOCLValidator.git</connection>
     <developerConnection>scm:git:git@gitlab.centralesupelec.fr:RiseClipseGroup/RiseClipseOCLValidator.git</developerConnection>
-    <tag>v1.0.0</tag>
+    <tag>HEAD</tag>
   </scm>
  
 
