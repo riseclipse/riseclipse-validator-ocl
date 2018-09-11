@@ -43,6 +43,7 @@ import org.eclipse.emf.ecore.EValidator.SubstitutionLabelProvider;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.util.Diagnostician;
 import org.eclipse.emf.edit.provider.IItemLabelProvider;
+import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.ocl.pivot.internal.utilities.PivotEnvironmentFactory;
 import org.eclipse.ocl.pivot.resource.BasicProjectManager;
 import org.eclipse.ocl.pivot.validation.ComposedEValidator;
@@ -52,13 +53,13 @@ import fr.centralesupelec.edf.riseclipse.util.IRiseClipseConsole;
 
 public class OCLValidator {
     
-    private EPackage modelPackage;
+    private @NonNull EPackage modelPackage;
     private ComposedEValidator validator;
-    private PivotEnvironmentFactory environmentFactory;
+    private @NonNull PivotEnvironmentFactory environmentFactory;
     // workaround for bug 486872
     private Path oclTempFile;
     
-    public OCLValidator( EPackage modelPackage, boolean standalone ) {
+    public OCLValidator( @NonNull EPackage modelPackage, boolean standalone ) {
         this.modelPackage = modelPackage;
         
         if( standalone ) {
@@ -145,6 +146,7 @@ public class OCLValidator {
         }
         
         URI uri = URI.createFileURI( oclTempFile.toFile().getAbsolutePath() );
+        if( uri == null ) return;
         CompleteOCLEObjectValidator oclValidator = new CompleteOCLEObjectValidator( modelPackage, uri, environmentFactory );
         validator.addChild( oclValidator );
        
@@ -188,6 +190,7 @@ public class OCLValidator {
                         }
                         else if( data.get( 1 ) instanceof EAttribute ) {
                             EAttribute attribute = ( EAttribute ) data.get( 1 );
+                            if( attribute == null ) continue;
                             console.error( "\tAttribute " + attribute.getName() + " of " + substitutionLabelProvider.getObjectLabel( object ) + " : " + childDiagnostic.getChildren().get( 0 ).getMessage() );
                         }
                         else {

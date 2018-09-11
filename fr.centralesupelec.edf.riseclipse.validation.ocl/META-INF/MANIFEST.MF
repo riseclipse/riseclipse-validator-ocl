@@ -7,6 +7,7 @@ Bundle-Version: 1.0.3.qualifier
 Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.emf.ecore,
  org.eclipse.emf.edit,
+ org.eclipse.jdt.annotation,
  fr.centralesupelec.edf.riseclipse.main,
  org.eclipse.ocl.pivot,
  org.eclipse.ocl.xtext.completeocl,
