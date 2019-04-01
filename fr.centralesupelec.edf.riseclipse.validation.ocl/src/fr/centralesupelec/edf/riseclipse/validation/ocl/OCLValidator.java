@@ -1,5 +1,5 @@
 /**
- *  Copyright (c) 2018 CentraleSupélec & EDF.
+ *  Copyright (c) 2019 CentraleSupélec & EDF.
  *  All rights reserved. This program and the accompanying materials
  *  are made available under the terms of the Eclipse Public License v1.0
  *  which accompanies this distribution, and is available at
@@ -24,25 +24,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
-import org.eclipse.emf.common.notify.AdapterFactory;
-import org.eclipse.emf.common.util.Diagnostic;
 import org.eclipse.emf.common.util.URI;
-import org.eclipse.emf.ecore.EAttribute;
-import org.eclipse.emf.ecore.EDataType;
-import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EPackage;
-import org.eclipse.emf.ecore.EStructuralFeature;
-import org.eclipse.emf.ecore.EValidator;
-import org.eclipse.emf.ecore.EValidator.SubstitutionLabelProvider;
-import org.eclipse.emf.ecore.resource.Resource;
-import org.eclipse.emf.ecore.util.Diagnostician;
-import org.eclipse.emf.edit.provider.IItemLabelProvider;
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.ocl.pivot.internal.utilities.PivotEnvironmentFactory;
 import org.eclipse.ocl.pivot.resource.BasicProjectManager;
@@ -50,39 +33,33 @@ import org.eclipse.ocl.pivot.validation.ComposedEValidator;
 import org.eclipse.ocl.xtext.completeocl.validation.CompleteOCLEObjectValidator;
 
 import fr.centralesupelec.edf.riseclipse.util.IRiseClipseConsole;
+import fr.centralesupelec.edf.riseclipse.util.RiseClipseFatalException;
 
 public class OCLValidator {
     
     private @NonNull EPackage modelPackage;
-    private ComposedEValidator validator;
-    private @NonNull PivotEnvironmentFactory environmentFactory;
     // workaround for bug 486872
-    private Path oclTempFile;
+    private @NonNull Path oclTempFile;
     
-    public OCLValidator( @NonNull EPackage modelPackage, boolean standalone ) {
+    public OCLValidator( @NonNull EPackage modelPackage, @NonNull IRiseClipseConsole console ) {
         this.modelPackage = modelPackage;
         
-        if( standalone ) {
-            // see http://help.eclipse.org/mars/topic/org.eclipse.ocl.doc/help/PivotStandalone.html
-            // *.uml support not required
-            //org.eclipse.ocl.pivot.uml.UMLStandaloneSetup.init();
-            // *.ocl Complete OCL documents support required
-            org.eclipse.ocl.xtext.completeocl.CompleteOCLStandaloneSetup.doSetup();
-            // *.oclinecore support not required
-            //org.eclipse.ocl.xtext.oclinecore.OCLinEcoreStandaloneSetup.doSetup();
-            // *.oclstdlib OCL Standard Library support required
-            org.eclipse.ocl.xtext.oclstdlib.OCLstdlibStandaloneSetup.doSetup();
-        }
+        // standalone
+        // see http://help.eclipse.org/mars/topic/org.eclipse.ocl.doc/help/PivotStandalone.html
+        // *.uml support not required
+        //org.eclipse.ocl.pivot.uml.UMLStandaloneSetup.init();
+        // *.ocl Complete OCL documents support required
+        org.eclipse.ocl.xtext.completeocl.CompleteOCLStandaloneSetup.doSetup();
+        // *.oclinecore support not required
+        //org.eclipse.ocl.xtext.oclinecore.OCLinEcoreStandaloneSetup.doSetup();
+        // *.oclstdlib OCL Standard Library support required
+        org.eclipse.ocl.xtext.oclstdlib.OCLstdlibStandaloneSetup.doSetup();
       
-        this.environmentFactory = new PivotEnvironmentFactory( new BasicProjectManager(), null );
-        
-        validator = ComposedEValidator.install( modelPackage );
-        
         try {
             oclTempFile = Files.createTempFile( "allConstraints", ".ocl" );
         }
         catch( IOException e ) {
-            e.printStackTrace();
+            throw new RiseClipseFatalException( "Unable to create temporary file", e );
         }
     }
 
@@ -94,11 +71,11 @@ public class OCLValidator {
 //        return true;
 //    }
     
-    public boolean addOCLDocument( String oclFileName, IRiseClipseConsole console ) {
+    public boolean addOCLDocument( @NonNull String oclFileName, @NonNull IRiseClipseConsole console ) {
         return addOCLDocument( new File( oclFileName ), console );
     }
 
-    public boolean addOCLDocument( File oclFile, IRiseClipseConsole console ) {
+    public boolean addOCLDocument( @NonNull File oclFile, @NonNull IRiseClipseConsole console ) {
         if( ! oclFile.exists() ) {
             console.error( oclFile + " does not exist" );
             return false;
@@ -130,75 +107,14 @@ public class OCLValidator {
         return true;
     }
 
-    public void validate( Resource resource, final AdapterFactory adapter, IRiseClipseConsole console ) {
-        // workaround for bug 486872
-        
-        // An existing CompleteOCLEObjectValidator may already be present, with the same or others OCL constraints
-        // We have to remove it first
-        ArrayList< EValidator > validatorsToRemove = new ArrayList<>();
-        for( EValidator e : validator.getChildren() ) {
-            if( e instanceof CompleteOCLEObjectValidator ) {
-                validatorsToRemove.add( e );
-            }
-        }
-        for( EValidator e : validatorsToRemove ) {
-            validator.removeChild( e );
-        }
-        
+    public void prepare( @NonNull ComposedEValidator validator, @NonNull IRiseClipseConsole console ) {
         URI uri = URI.createFileURI( oclTempFile.toFile().getAbsolutePath() );
-        if( uri == null ) return;
-        CompleteOCLEObjectValidator oclValidator = new CompleteOCLEObjectValidator( modelPackage, uri, environmentFactory );
-        validator.addChild( oclValidator );
-       
-        Map<Object, Object> context = new HashMap< Object, Object >();
-        SubstitutionLabelProvider substitutionLabelProvider = new EValidator.SubstitutionLabelProvider() {
-            
-            @Override
-            public String getValueLabel( EDataType eDataType, Object value ) {
-                return Diagnostician.INSTANCE.getValueLabel( eDataType, value );
-            }
-            
-            @Override
-            public String getObjectLabel( EObject eObject ) {
-                IItemLabelProvider labelProvider = ( IItemLabelProvider ) adapter.adapt( eObject, IItemLabelProvider.class );
-                return labelProvider.getText( eObject );
-            }
-            
-            @Override
-            public String getFeatureLabel( EStructuralFeature eStructuralFeature ) {
-                return Diagnostician.INSTANCE.getFeatureLabel( eStructuralFeature );
-            }
-        };
-        context.put(EValidator.SubstitutionLabelProvider.class, substitutionLabelProvider );
-
-        for( int n = 0; n < resource.getContents().size(); ++n ) {
-            Diagnostic diagnostic = Diagnostician.INSTANCE.validate( resource.getContents().get( n ), context );
-            
-            if( diagnostic.getSeverity() == Diagnostic.ERROR || diagnostic.getSeverity() == Diagnostic.WARNING ) {
-                //EObject root = ( EObject ) diagnostic.getData().get( 0 );
-                //URI uri = root.eResource().getURI();
-                //console.error( "in file " + uri.lastSegment() );
-                for( Iterator< Diagnostic > i = diagnostic.getChildren().iterator(); i.hasNext(); ) {
-                    Diagnostic childDiagnostic = i.next();
-                    switch( childDiagnostic.getSeverity() ) {
-                    case Diagnostic.ERROR:
-                    case Diagnostic.WARNING:
-                        List< ? > data = childDiagnostic.getData();
-                        EObject object = ( EObject ) data.get( 0 );
-                        if( data.size() == 1 ) {
-                            console.error( "\t" + childDiagnostic.getMessage() );
-                        }
-                        else if( data.get( 1 ) instanceof EAttribute ) {
-                            EAttribute attribute = ( EAttribute ) data.get( 1 );
-                            if( attribute == null ) continue;
-                            console.error( "\tAttribute " + attribute.getName() + " of " + substitutionLabelProvider.getObjectLabel( object ) + " : " + childDiagnostic.getChildren().get( 0 ).getMessage() );
-                        }
-                        else {
-                            console.error( "\t" + childDiagnostic.getMessage() );
-                        }
-                    }
-                }
-            }
+        if( uri == null ) {
+            throw new RiseClipseFatalException( "Unable to create URI for temporary file", null );
         }
+        PivotEnvironmentFactory environmentFactory = new PivotEnvironmentFactory( new BasicProjectManager(), null );
+        CompleteOCLEObjectValidator oclValidator = new CompleteOCLEObjectValidator( modelPackage, uri, environmentFactory );
+        validator.addChild( oclValidator );    
     }
+    
 }
