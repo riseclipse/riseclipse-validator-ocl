@@ -24,11 +24,17 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
+import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EPackage;
+import org.eclipse.emf.ecore.resource.Resource.Diagnostic;
+import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.ocl.pivot.internal.utilities.PivotEnvironmentFactory;
 import org.eclipse.ocl.pivot.resource.BasicProjectManager;
+import org.eclipse.ocl.pivot.resource.CSResource;
 import org.eclipse.ocl.pivot.validation.ComposedEValidator;
 import org.eclipse.ocl.xtext.completeocl.validation.CompleteOCLEObjectValidator;
 
@@ -40,6 +46,10 @@ public class OCLValidator {
     private @NonNull EPackage modelPackage;
     // workaround for bug 486872
     private @NonNull Path oclTempFile;
+    private PivotEnvironmentFactory environmentFactoryForChecking;
+    
+    // see below
+    private static final Logger logger = Logger.getLogger( CompleteOCLEObjectValidator.class );
     
     public OCLValidator( @NonNull EPackage modelPackage, @NonNull IRiseClipseConsole console ) {
         this.modelPackage = modelPackage;
@@ -61,6 +71,10 @@ public class OCLValidator {
         catch( IOException e ) {
             throw new RiseClipseFatalException( "Unable to create temporary file", e );
         }
+        
+        // CompleteOCLEObjectValidator display error messages on its logger.
+        // We want to use our console for this, so we block the error level
+        logger.setLevel( Level.FATAL );
     }
 
     // Does not work now
@@ -88,6 +102,34 @@ public class OCLValidator {
             console.error( oclFile + " cannot be read" );
             return false;
         }
+
+        URI uri = URI.createFileURI( oclFile.getAbsolutePath() );
+        if( uri == null ) {
+            throw new RiseClipseFatalException( "Unable to create URI for temporary file", null );
+        }
+        
+        // We want to check the validity of OCL files
+        // So, we have to do it now, before concatenating it to oclTempFile
+        // Errors are detected in CompleteOCLEObjectValidator.initialize()
+        // but there is no way to get back errors, we only know that there is
+        // a problem because initialize() returns false.
+        // The code below is taken from CompleteOCLEObjectValidator.initialize()
+        if( environmentFactoryForChecking == null ) {
+            environmentFactoryForChecking = new PivotEnvironmentFactory( new BasicProjectManager(), null );
+        }
+        CompleteOCLEObjectValidator oclValidator = new CompleteOCLEObjectValidator( modelPackage, uri, environmentFactoryForChecking );
+        if( ! oclValidator.initialize() ) {
+            console.error( "syntax error in " + oclFile + " (it will be ignored):" );
+            @NonNull
+            ResourceSet resourceSet = environmentFactoryForChecking.getResourceSet();
+            CSResource xtextResource = (CSResource) resourceSet.getResource( uri, true );
+            EList< Diagnostic > errors = xtextResource.getErrors();
+            for( Diagnostic error : errors ) {
+                console.error( "  " + error.getMessage() );
+            }
+            return false;
+        }
+        
         //Path path = FileSystems.getDefault().getPath( oclFileName ).toAbsolutePath();
         String path = oclFile.getAbsolutePath();
         // Take care of Windows paths
@@ -112,6 +154,7 @@ public class OCLValidator {
         if( uri == null ) {
             throw new RiseClipseFatalException( "Unable to create URI for temporary file", null );
         }
+        // Do not re-use environmentFactoryForChecking, it will gave errors
         PivotEnvironmentFactory environmentFactory = new PivotEnvironmentFactory( new BasicProjectManager(), null );
         CompleteOCLEObjectValidator oclValidator = new CompleteOCLEObjectValidator( modelPackage, uri, environmentFactory );
         validator.addChild( oclValidator );    
