@@ -12,7 +12,8 @@ Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.ocl.pivot,
  org.eclipse.ocl.xtext.completeocl,
  org.eclipse.ocl.xtext.oclstdlib,
- org.apache.log4j
+ org.apache.log4j,
+ org.eclipse.emf.common
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ActivationPolicy: lazy
 Export-Package: fr.centralesupelec.edf.riseclipse.validation.ocl
