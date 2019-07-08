@@ -9,7 +9,7 @@
 
   <parent>
     <groupId>fr.centralesupelec.edf.riseclipse</groupId>
-    <artifactId>RiseClipseOCLValidator</artifactId>
+    <artifactId>riseclipse-validator-ocl</artifactId>
     <version>1.0.3-SNAPSHOT</version>
   </parent>
 
