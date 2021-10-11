@@ -38,7 +38,6 @@ import org.eclipse.ocl.pivot.utilities.OCL;
 import org.eclipse.ocl.pivot.validation.ComposedEValidator;
 import org.eclipse.ocl.xtext.completeocl.validation.CompleteOCLEObjectValidator;
 import fr.centralesupelec.edf.riseclipse.util.IRiseClipseConsole;
-import fr.centralesupelec.edf.riseclipse.util.IRiseClipseResourceSet;
 import fr.centralesupelec.edf.riseclipse.util.RiseClipseFatalException;
 
 public class OCLValidator {
@@ -50,7 +49,7 @@ public class OCLValidator {
     // see below
     private static final Logger logger = Logger.getLogger( CompleteOCLEObjectValidator.class );
     
-    public OCLValidator( @NonNull EPackage modelPackage, IRiseClipseResourceSet resourceSet, @NonNull IRiseClipseConsole console ) {
+    public OCLValidator( @NonNull EPackage modelPackage, @NonNull IRiseClipseConsole console ) {
         this.modelPackage = modelPackage;
         // standalone
         // see http://help.eclipse.org/mars/topic/org.eclipse.ocl.doc/help/PivotStandalone.html
