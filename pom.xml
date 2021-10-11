@@ -40,8 +40,8 @@
   </parent>
 
   <scm>
-    <connection>scm:git:git@gitlab-research.centralesupelec.fr:RiseClipseGroup/riseclipse-validator-ocl.git</connection>
-    <developerConnection>scm:git:git@gitlab-research.centralesupelec.fr:RiseClipseGroup/riseclipse-validator-ocl.git</developerConnection>
+    <connection>scm:git:git@github.com:riseclipse/riseclipse-validator-ocl.git</connection>
+    <developerConnection>scm:git:git@github.com:riseclipse/riseclipse-validator-ocl.git</developerConnection>
     <tag>HEAD</tag>
   </scm>
  
