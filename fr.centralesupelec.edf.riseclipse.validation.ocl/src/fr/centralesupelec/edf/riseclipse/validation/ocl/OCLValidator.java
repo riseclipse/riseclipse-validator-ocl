@@ -32,15 +32,13 @@ import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EPackage;
 import org.eclipse.emf.ecore.resource.Resource.Diagnostic;
-import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.jdt.annotation.NonNull;
-import org.eclipse.ocl.pivot.internal.utilities.PivotEnvironmentFactory;
-import org.eclipse.ocl.pivot.resource.BasicProjectManager;
 import org.eclipse.ocl.pivot.resource.CSResource;
+import org.eclipse.ocl.pivot.utilities.OCL;
 import org.eclipse.ocl.pivot.validation.ComposedEValidator;
 import org.eclipse.ocl.xtext.completeocl.validation.CompleteOCLEObjectValidator;
-
 import fr.centralesupelec.edf.riseclipse.util.IRiseClipseConsole;
+import fr.centralesupelec.edf.riseclipse.util.IRiseClipseResourceSet;
 import fr.centralesupelec.edf.riseclipse.util.RiseClipseFatalException;
 
 public class OCLValidator {
@@ -48,14 +46,12 @@ public class OCLValidator {
     private @NonNull EPackage modelPackage;
     // workaround for bug 486872
     private @NonNull Path oclTempFile;
-    private PivotEnvironmentFactory environmentFactoryForChecking;
-    
+    private @NonNull OCL ocl;
     // see below
     private static final Logger logger = Logger.getLogger( CompleteOCLEObjectValidator.class );
     
-    public OCLValidator( @NonNull EPackage modelPackage, @NonNull IRiseClipseConsole console ) {
+    public OCLValidator( @NonNull EPackage modelPackage, IRiseClipseResourceSet resourceSet, @NonNull IRiseClipseConsole console ) {
         this.modelPackage = modelPackage;
-        
         // standalone
         // see http://help.eclipse.org/mars/topic/org.eclipse.ocl.doc/help/PivotStandalone.html
         // *.uml support not required
@@ -77,9 +73,11 @@ public class OCLValidator {
         // CompleteOCLEObjectValidator display error messages on its logger.
         // We want to use our console for this, so we block the error level
         logger.setLevel( Level.FATAL );
+        
+        ocl = OCL.newInstance( OCL.NO_PROJECTS );
     }
 
-    // Does not work now
+    // Does not work now (last tested: 7 October 2021)
     // See https://bugs.eclipse.org/bugs/show_bug.cgi?id=486872
 //    public boolean addOCLDocument( URI oclURI, IRiseClipseConsole console ) {
 //        CompleteOCLEObjectValidator oclValidator = new CompleteOCLEObjectValidator( modelPackage, oclURI, environmentFactory );
@@ -105,27 +103,23 @@ public class OCLValidator {
             return false;
         }
 
-        URI uri = URI.createFileURI( oclFile.getAbsolutePath() );
-        if( uri == null ) {
+        URI oclUri = URI.createFileURI( oclFile.getAbsolutePath() );
+        if( oclUri == null ) {
             throw new RiseClipseFatalException( "Unable to create URI for temporary file", null );
         }
         
         // We want to check the validity of OCL files
         // So, we have to do it now, before concatenating it to oclTempFile
-        // Errors are detected in CompleteOCLEObjectValidator.initialize()
-        // but there is no way to get back errors, we only know that there is
-        // a problem because initialize() returns false.
-        // The code below is taken from CompleteOCLEObjectValidator.initialize()
-        if( environmentFactoryForChecking == null ) {
-            environmentFactoryForChecking = new PivotEnvironmentFactory( new BasicProjectManager(), null );
+        CSResource oclResource = null;
+        try {
+        	oclResource = ocl.getCSResource( oclUri );
         }
-        CompleteOCLEObjectValidator oclValidator = new CompleteOCLEObjectValidator( modelPackage, uri, environmentFactoryForChecking );
-        if( ! oclValidator.initialize() ) {
+        catch( IOException e ) {
+            throw new RiseClipseFatalException( "Unable to read OCL file", null );
+        }
+        if( ! oclResource.getErrors().isEmpty() ) {
             console.error( "syntax error in " + oclFile + " (it will be ignored):" );
-            @NonNull
-            ResourceSet resourceSet = environmentFactoryForChecking.getResourceSet();
-            CSResource xtextResource = (CSResource) resourceSet.getResource( uri, true );
-            EList< Diagnostic > errors = xtextResource.getErrors();
+            EList< Diagnostic > errors = oclResource.getErrors();
             for( Diagnostic error : errors ) {
                 console.error( "  " + error.getMessage() );
             }
@@ -145,8 +139,7 @@ public class OCLValidator {
             o.close();
         }
         catch( IOException e ) {
-            e.printStackTrace();
-            return false;
+            throw new RiseClipseFatalException( "Unable to write temporary OCL file", null );
         }
         return true;
     }
@@ -156,9 +149,7 @@ public class OCLValidator {
         if( uri == null ) {
             throw new RiseClipseFatalException( "Unable to create URI for temporary file", null );
         }
-        // Do not re-use environmentFactoryForChecking, it will gave errors
-        PivotEnvironmentFactory environmentFactory = new PivotEnvironmentFactory( new BasicProjectManager(), null );
-        CompleteOCLEObjectValidator oclValidator = new CompleteOCLEObjectValidator( modelPackage, uri, environmentFactory );
+        CompleteOCLEObjectValidator oclValidator = new CompleteOCLEObjectValidator( modelPackage, uri );
         validator.addChild( oclValidator );    
     }
     
