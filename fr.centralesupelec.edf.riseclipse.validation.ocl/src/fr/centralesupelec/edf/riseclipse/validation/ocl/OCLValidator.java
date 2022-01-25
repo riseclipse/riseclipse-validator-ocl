@@ -1,6 +1,6 @@
 /*
 *************************************************************************
-**  Copyright (c) 2016-2021 CentraleSupélec & EDF.
+**  Copyright (c) 2016-2022 CentraleSupélec & EDF.
 **  All rights reserved. This program and the accompanying materials
 **  are made available under the terms of the Eclipse Public License v2.0
 **  which accompanies this distribution, and is available at
@@ -42,6 +42,8 @@ import fr.centralesupelec.edf.riseclipse.util.RiseClipseFatalException;
 
 public class OCLValidator {
     
+    private static final String OCL_SETUP_CATEGORY = "OCL/Setup";
+
     private @NonNull EPackage modelPackage;
     // workaround for bug 486872
     private @NonNull Path oclTempFile;
@@ -90,17 +92,18 @@ public class OCLValidator {
 
     public boolean addOCLDocument( @NonNull File oclFile, @NonNull IRiseClipseConsole console ) {
         if( ! oclFile.exists() ) {
-            console.error( oclFile + " does not exist" );
+            console.error( OCL_SETUP_CATEGORY, 0, oclFile, " does not exist" );
             return false;
         }
         if( ! oclFile.isFile() ) {
-            console.error( oclFile + " is not a file" );
+            console.error( OCL_SETUP_CATEGORY, 0, oclFile, " is not a file" );
             return false;
         }
         if( ! oclFile.canRead() ) {
-            console.error( oclFile + " cannot be read" );
+            console.error( OCL_SETUP_CATEGORY, 0, oclFile, " cannot be read" );
             return false;
         }
+        console.verbose( OCL_SETUP_CATEGORY, 0, "Loading file ", oclFile.getName(), " in RiseClipse" );
 
         URI oclUri = URI.createFileURI( oclFile.getAbsolutePath() );
         if( oclUri == null ) {
@@ -117,10 +120,10 @@ public class OCLValidator {
             throw new RiseClipseFatalException( "Unable to read OCL file", null );
         }
         if( ! oclResource.getErrors().isEmpty() ) {
-            console.error( "syntax error in " + oclFile + " (it will be ignored):" );
+            console.error( OCL_SETUP_CATEGORY, 0, "syntax error in ", oclFile, " (it will be ignored):" );
             EList< Diagnostic > errors = oclResource.getErrors();
             for( Diagnostic error : errors ) {
-                console.error( "  " + error.getMessage() );
+                console.error( OCL_SETUP_CATEGORY, 0, "  ", error.getMessage() );
             }
             return false;
         }
