@@ -37,8 +37,8 @@ import org.eclipse.ocl.pivot.resource.CSResource;
 import org.eclipse.ocl.pivot.utilities.OCL;
 import org.eclipse.ocl.pivot.validation.ComposedEValidator;
 import org.eclipse.ocl.xtext.completeocl.validation.CompleteOCLEObjectValidator;
+
 import fr.centralesupelec.edf.riseclipse.util.IRiseClipseConsole;
-import fr.centralesupelec.edf.riseclipse.util.RiseClipseFatalException;
 
 public class OCLValidator {
     
@@ -52,6 +52,8 @@ public class OCLValidator {
     private static final Logger logger = Logger.getLogger( CompleteOCLEObjectValidator.class );
     
     public OCLValidator( @NonNull EPackage modelPackage, @NonNull IRiseClipseConsole console ) {
+        console.debug( OCL_SETUP_CATEGORY, 0, "Building OCLValidator for ", modelPackage.getName() );
+        
         this.modelPackage = modelPackage;
         // standalone
         // see http://help.eclipse.org/mars/topic/org.eclipse.ocl.doc/help/PivotStandalone.html
@@ -68,7 +70,7 @@ public class OCLValidator {
             oclTempFile = Files.createTempFile( "allConstraints", ".ocl" );
         }
         catch( IOException e ) {
-            throw new RiseClipseFatalException( "Unable to create temporary file", e );
+            console.emergency( OCL_SETUP_CATEGORY, 0, "Unable to create temporary file: got IOException ", e );
         }
         
         // CompleteOCLEObjectValidator display error messages on its logger.
@@ -91,6 +93,8 @@ public class OCLValidator {
     }
 
     public boolean addOCLDocument( @NonNull File oclFile, @NonNull IRiseClipseConsole console ) {
+        console.debug( OCL_SETUP_CATEGORY, 0, "addOCLDocument for ", oclFile.getName() );
+        
         if( ! oclFile.exists() ) {
             console.error( OCL_SETUP_CATEGORY, 0, oclFile, " does not exist" );
             return false;
@@ -103,11 +107,11 @@ public class OCLValidator {
             console.error( OCL_SETUP_CATEGORY, 0, oclFile, " cannot be read" );
             return false;
         }
-        console.verbose( OCL_SETUP_CATEGORY, 0, "Loading file ", oclFile.getName(), " in RiseClipse" );
+        console.info( OCL_SETUP_CATEGORY, 0, "Loading file ", oclFile.getName(), " in RiseClipse" );
 
         URI oclUri = URI.createFileURI( oclFile.getAbsolutePath() );
         if( oclUri == null ) {
-            throw new RiseClipseFatalException( "Unable to create URI for temporary file", null );
+            console.emergency( OCL_SETUP_CATEGORY, 0, "Unable to create URI for temporary file" );
         }
         
         // We want to check the validity of OCL files
@@ -117,7 +121,7 @@ public class OCLValidator {
         	oclResource = ocl.getCSResource( oclUri );
         }
         catch( IOException e ) {
-            throw new RiseClipseFatalException( "Unable to read OCL file", null );
+            console.emergency( OCL_SETUP_CATEGORY, 0, "Unable to read OCL file" );
         }
         if( ! oclResource.getErrors().isEmpty() ) {
             console.error( OCL_SETUP_CATEGORY, 0, "syntax error in ", oclFile, " (it will be ignored):" );
@@ -141,7 +145,7 @@ public class OCLValidator {
             o.close();
         }
         catch( IOException e ) {
-            throw new RiseClipseFatalException( "Unable to write temporary OCL file", null );
+            console.emergency( OCL_SETUP_CATEGORY, 0, "Unable to write temporary file: got IOException ", e );
         }
         return true;
     }
@@ -149,7 +153,7 @@ public class OCLValidator {
     public void prepare( @NonNull ComposedEValidator validator, @NonNull IRiseClipseConsole console ) {
         URI uri = URI.createFileURI( oclTempFile.toFile().getAbsolutePath() );
         if( uri == null ) {
-            throw new RiseClipseFatalException( "Unable to create URI for temporary file", null );
+            console.emergency( OCL_SETUP_CATEGORY, 0, "Unable to create URI for temporary file" );
         }
         CompleteOCLEObjectValidator oclValidator = new CompleteOCLEObjectValidator( modelPackage, uri );
         validator.addChild( oclValidator );    
