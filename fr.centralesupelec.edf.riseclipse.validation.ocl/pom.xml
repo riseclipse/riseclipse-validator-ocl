@@ -55,7 +55,7 @@
   <!-- RiseClipse plugins needed -->
   <dependencies>
     <dependency>
-      <groupId>fr.centralesupelec.edf.riseclipse</groupId>
+      <groupId>io.github.riseclipse</groupId>
       <artifactId>fr.centralesupelec.edf.riseclipse.main</artifactId>
       <version>1.2.0</version>
     </dependency>
