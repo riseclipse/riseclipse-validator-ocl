@@ -46,10 +46,10 @@ public class OCLValidator {
 
     private @NonNull EPackage modelPackage;
     // workaround for bug 486872
-    private @NonNull Path oclTempFile;
-    private @NonNull OCL ocl;
+    private @NonNull Path oclTempFile = Path.of( ".", "" );  // Initialization to remove a Sonar warning
+    private @NonNull OCL ocl = OCL.newInstance( OCL.NO_PROJECTS );
     // see below
-    private static final Logger logger = Logger.getLogger( CompleteOCLEObjectValidator.class );
+    private static final Logger logger = Logger.getLogger( CompleteOCLEObjectValidator.class );  // NOSONAR
     
     public OCLValidator( @NonNull EPackage modelPackage, @NonNull IRiseClipseConsole console ) {
         console.debug( OCL_SETUP_CATEGORY, 0, "Building OCLValidator for ", modelPackage.getName() );
@@ -58,11 +58,11 @@ public class OCLValidator {
         // standalone
         // see http://help.eclipse.org/mars/topic/org.eclipse.ocl.doc/help/PivotStandalone.html
         // *.uml support not required
-        //org.eclipse.ocl.pivot.uml.UMLStandaloneSetup.init();
+        //org.eclipse.ocl.pivot.uml.UMLStandaloneSetup.init();  // NOSONAR
         // *.ocl Complete OCL documents support required
         org.eclipse.ocl.xtext.completeocl.CompleteOCLStandaloneSetup.doSetup();
         // *.oclinecore support not required
-        //org.eclipse.ocl.xtext.oclinecore.OCLinEcoreStandaloneSetup.doSetup();
+        //org.eclipse.ocl.xtext.oclinecore.OCLinEcoreStandaloneSetup.doSetup();  // NOSONAR
         // *.oclstdlib OCL Standard Library support required
         org.eclipse.ocl.xtext.oclstdlib.OCLstdlibStandaloneSetup.doSetup();
       
@@ -71,22 +71,21 @@ public class OCLValidator {
         }
         catch( IOException e ) {
             console.emergency( OCL_SETUP_CATEGORY, 0, "Unable to create temporary file: got IOException ", e );
+            return;
         }
         
         // CompleteOCLEObjectValidator display error messages on its logger.
         // We want to use our console for this, so we block the error level
         logger.setLevel( Level.FATAL );
-        
-        ocl = OCL.newInstance( OCL.NO_PROJECTS );
     }
 
     // Does not work now (last tested: 7 October 2021)
     // See https://bugs.eclipse.org/bugs/show_bug.cgi?id=486872
-//    public boolean addOCLDocument( URI oclURI, IRiseClipseConsole console ) {
-//        CompleteOCLEObjectValidator oclValidator = new CompleteOCLEObjectValidator( modelPackage, oclURI, environmentFactory );
-//        validator.addChild( oclValidator );
-//        return true;
-//    }
+//    public boolean addOCLDocument( URI oclURI, IRiseClipseConsole console ) {                                                    // NOSONAR
+//        CompleteOCLEObjectValidator oclValidator = new CompleteOCLEObjectValidator( modelPackage, oclURI, environmentFactory );  // NOSONAR
+//        validator.addChild( oclValidator );                                                                                      // NOSONAR
+//        return true;                                                                                                             // NOSONAR
+//    }                                                                                                                            // NOSONAR
     
     public boolean addOCLDocument( @NonNull String oclFileName, @NonNull IRiseClipseConsole console ) {
         return addOCLDocument( new File( oclFileName ), console );
@@ -112,6 +111,7 @@ public class OCLValidator {
         URI oclUri = URI.createFileURI( oclFile.getAbsolutePath() );
         if( oclUri == null ) {
             console.emergency( OCL_SETUP_CATEGORY, 0, "Unable to create URI for temporary file" );
+            return false;
         }
         
         // We want to check the validity of OCL files
@@ -122,6 +122,7 @@ public class OCLValidator {
         }
         catch( IOException e ) {
             console.emergency( OCL_SETUP_CATEGORY, 0, "Unable to read OCL file" );
+            return false;
         }
         if( ! oclResource.getErrors().isEmpty() ) {
             console.error( OCL_SETUP_CATEGORY, 0, "syntax error in ", oclFile, " (it will be ignored):" );
@@ -132,17 +133,13 @@ public class OCLValidator {
             return false;
         }
         
-        //Path path = FileSystems.getDefault().getPath( oclFileName ).toAbsolutePath();
         String path = oclFile.getAbsolutePath();
         // Take care of Windows paths
         if( path.charAt( 0 ) != '/' ) {
-            path = "/" + path.replace( '\\', '/' );
+            path = "/" + path.replace( '\\', '/' );  // NOSONAR
         }
-        try {
-            BufferedWriter o = Files.newBufferedWriter( oclTempFile, StandardOpenOption.APPEND );
-            //o.write( "import \'" + path + "\'\n" );
+        try( BufferedWriter o = Files.newBufferedWriter( oclTempFile, StandardOpenOption.APPEND )) {
             o.write( "import \'file:" + path + "\'\n" );
-            o.close();
         }
         catch( IOException e ) {
             console.emergency( OCL_SETUP_CATEGORY, 0, "Unable to write temporary file: got IOException ", e );
@@ -154,6 +151,7 @@ public class OCLValidator {
         URI uri = URI.createFileURI( oclTempFile.toFile().getAbsolutePath() );
         if( uri == null ) {
             console.emergency( OCL_SETUP_CATEGORY, 0, "Unable to create URI for temporary file" );
+            return;
         }
         CompleteOCLEObjectValidator oclValidator = new CompleteOCLEObjectValidator( modelPackage, uri );
         validator.addChild( oclValidator );    
