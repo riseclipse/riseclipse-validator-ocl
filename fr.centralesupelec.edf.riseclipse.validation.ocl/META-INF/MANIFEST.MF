@@ -4,7 +4,7 @@ Bundle-Name: %pluginName
 Bundle-Vendor: %providerName
 Bundle-SymbolicName: fr.centralesupelec.edf.riseclipse.validation.ocl;singleton:=true
 Automatic-Module-Name: fr.centralesupelec.edf.riseclipse.validation.ocl
-Bundle-Version: 1.2.4
+Bundle-Version: 1.2.5.qualifier
 Bundle-ClassPath: .
 Bundle-Localization: plugin
 Bundle-RequiredExecutionEnvironment: JavaSE-17
