@@ -1,6 +1,6 @@
 /*
 *************************************************************************
-**  Copyright (c) 2016-2022 CentraleSupélec & EDF.
+**  Copyright (c) 2016-2024 CentraleSupélec & EDF.
 **  All rights reserved. This program and the accompanying materials
 **  are made available under the terms of the Eclipse Public License v2.0
 **  which accompanies this distribution, and is available at
@@ -26,21 +26,27 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.Map;
+
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
+import org.eclipse.emf.common.util.DiagnosticChain;
 import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.common.util.URI;
+import org.eclipse.emf.ecore.EClass;
+import org.eclipse.emf.ecore.EDataType;
+import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EPackage;
+import org.eclipse.emf.ecore.EValidator;
 import org.eclipse.emf.ecore.resource.Resource.Diagnostic;
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.ocl.pivot.resource.CSResource;
 import org.eclipse.ocl.pivot.utilities.OCL;
-import org.eclipse.ocl.pivot.validation.ComposedEValidator;
 import org.eclipse.ocl.xtext.completeocl.validation.CompleteOCLEObjectValidator;
 
 import fr.centralesupelec.edf.riseclipse.util.IRiseClipseConsole;
 
-public class OCLValidator {
+public class OCLValidator implements EValidator {
     
     private static final String OCL_SETUP_CATEGORY = "OCL/Setup";
 
@@ -48,6 +54,9 @@ public class OCLValidator {
     // workaround for bug 486872
     private @NonNull Path oclTempFile = Path.of( ".", "" );  // Initialization to remove a Sonar warning
     private @NonNull OCL ocl = OCL.newInstance( OCL.NO_PROJECTS );
+
+    private CompleteOCLEObjectValidator validator;
+    
     // see below
     private static final Logger logger = Logger.getLogger( CompleteOCLEObjectValidator.class );  // NOSONAR
     
@@ -147,14 +156,28 @@ public class OCLValidator {
         return true;
     }
 
-    public void prepare( @NonNull ComposedEValidator validator, @NonNull IRiseClipseConsole console ) {
+    public void prepare( @NonNull IRiseClipseConsole console ) {
         URI uri = URI.createFileURI( oclTempFile.toFile().getAbsolutePath() );
         if( uri == null ) {
             console.emergency( OCL_SETUP_CATEGORY, 0, "Unable to create URI for temporary file" );
             return;
         }
-        CompleteOCLEObjectValidator oclValidator = new CompleteOCLEObjectValidator( modelPackage, uri );
-        validator.addChild( oclValidator );    
+        validator = new CompleteOCLEObjectValidator( modelPackage, uri );
+    }
+
+    @Override
+    public boolean validate( EObject eObject, DiagnosticChain diagnostics, Map< Object, Object > context ) {
+        return validator.validate( eObject, diagnostics, context );
+    }
+
+    @Override
+    public boolean validate( EClass eClass, EObject eObject, DiagnosticChain diagnostics, Map< Object, Object > context ) {
+        return validator.validate( eClass, eObject, diagnostics, context );
+    }
+
+    @Override
+    public boolean validate( EDataType eDataType, Object value, DiagnosticChain diagnostics, Map< Object, Object > context ) {
+        return validator.validate( eDataType, value, diagnostics, context );
     }
     
 }
