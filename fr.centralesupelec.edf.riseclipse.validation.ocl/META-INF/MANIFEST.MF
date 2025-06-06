@@ -4,10 +4,10 @@ Bundle-Name: %pluginName
 Bundle-Vendor: %providerName
 Bundle-SymbolicName: fr.centralesupelec.edf.riseclipse.validation.ocl;singleton:=true
 Automatic-Module-Name: fr.centralesupelec.edf.riseclipse.validation.ocl
-Bundle-Version: 1.2.7
+Bundle-Version: 1.2.8.qualifier
 Bundle-ClassPath: .
 Bundle-Localization: plugin
-Bundle-RequiredExecutionEnvironment: JavaSE-17
+Bundle-RequiredExecutionEnvironment: JavaSE-21
 Export-Package: fr.centralesupelec.edf.riseclipse.validation.ocl
 Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.core.resources,
@@ -22,5 +22,5 @@ Require-Bundle: org.eclipse.core.runtime,
  org.apache.log4j,
  com.google.guava,
  com.google.inject,
- fr.centralesupelec.edf.riseclipse.main;bundle-version="[1.2.9,1.3.0)"
+ fr.centralesupelec.edf.riseclipse.main;bundle-version="1.2.12"
 Bundle-ActivationPolicy: lazy
